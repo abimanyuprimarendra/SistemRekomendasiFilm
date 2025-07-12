@@ -1,35 +1,39 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import re
+import requests
+import io
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-# ===============================
-# FILE ID Google Drive CSV FIXED
-# ===============================
-FILE_ID = "1muHUAK4oi5A16qj-lNkIREwkyAAhgVE5"
-FILE_URL = f"https://drive.google.com/uc?id={FILE_ID}"
-
-# ===============================
-# Fungsi Load Data
-# ===============================
+# ============================================
+# Fungsi: Load CSV dari Google Drive via file_id
+# ============================================
 @st.cache_data
-def load_data():
-    df = pd.read_csv(FILE_URL)
-    return df
+def load_data_from_gdrive():
+    file_id = "1muHUAK4oi5A16qj-lNkIREwkyAAhgVE5"  # Ganti dengan ID milikmu
+    url = f"https://drive.google.com/uc?id={file_id}"
+    response = requests.get(url)
 
-# ===============================
-# Preprocessing Teks
-# ===============================
+    if response.status_code != 200:
+        st.error("❌ Gagal mengambil data dari Google Drive.")
+        return None
+
+    return pd.read_csv(io.BytesIO(response.content))
+
+# ============================================
+# Fungsi: Preprocessing teks deskripsi
+# ============================================
 def preprocess_text(text):
     text = text.lower()
     text = re.sub(r'[^a-z\s]', '', text)
     tokens = text.split()
     return ' '.join(tokens)
 
-# ===============================
-# Fungsi Rekomendasi
-# ===============================
+# ============================================
+# Fungsi: Rekomendasi berdasarkan cosine similarity
+# ============================================
 def recommend_cosine(title, df, cosine_sim, n=5):
     title_clean = re.sub(r'[^a-z\s]', '', title.lower())
     try:
@@ -52,34 +56,43 @@ def recommend_cosine(title, df, cosine_sim, n=5):
     except IndexError:
         return None
 
-# ===============================
-# Streamlit App Layout
-# ===============================
-st.title("🎬 Rekomendasi Film IMDb")
+# ============================================
+# UI Streamlit
+# ============================================
+st.set_page_config(page_title="Rekomendasi Film IMDb", layout="wide")
+st.title("🎬 Sistem Rekomendasi Film IMDb")
 
 # Load data
-df = load_data()
+df = load_data_from_gdrive()
+if df is None:
+    st.stop()
+
+# Tampilkan data awal (opsional)
+with st.expander("🔍 Lihat Data Mentah"):
+    st.dataframe(df.head())
 
 # Isi kosong jadi string
 features = ['movie title', 'Generes', 'Director', 'Writer']
 for feature in features:
     df[feature] = df[feature].fillna('')
+
+# Gabung semua fitur jadi 1 deskripsi
 df['deskripsi'] = df.apply(lambda row: ' '.join(row[feature] for feature in features), axis=1)
 df['deskripsi'] = df['deskripsi'].apply(preprocess_text)
 
-# TF-IDF dan cosine similarity
+# TF-IDF & cosine similarity
 tfidf = TfidfVectorizer()
 tfidf_matrix = tfidf.fit_transform(df['deskripsi'])
 cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
 
-# Input judul film
-title_input = st.text_input("Masukkan Judul Film:", "Spider-Man")
+# Input user
+title_input = st.text_input("🎞 Masukkan Judul Film:", "Spider-Man")
 
-if st.button("Tampilkan Rekomendasi"):
+if st.button("🎯 Tampilkan Rekomendasi"):
     recommendations = recommend_cosine(title_input, df, cosine_sim)
 
     if recommendations:
-        st.subheader(f"Rekomendasi untuk: **{title_input}**")
+        st.subheader(f"📌 Rekomendasi untuk: **{title_input}**")
         for rec in recommendations:
             with st.container():
                 st.markdown(f"### 🎥 {rec['Judul']}")
@@ -91,5 +104,4 @@ if st.button("Tampilkan Rekomendasi"):
                 st.info(rec['Deskripsi'])
                 st.markdown("---")
     else:
-        st.warning(f"Film '{title_input}' tidak ditemukan dalam dataset.")
-
+        st.warning(f"⚠️ Film '{title_input}' tidak ditemukan dalam dataset.")
