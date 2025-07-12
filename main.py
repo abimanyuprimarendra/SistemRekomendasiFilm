@@ -44,19 +44,19 @@ def recommend_nn(title, df, tfidf_matrix, nn_model, n=5):
         return None
 
     idx = df[match].index[0]
-    distances, indices = nn_model.kneighbors(tfidf_matrix[idx], n_neighbors=n+1)  # +1 karena ada dirinya sendiri
+    distances, indices = nn_model.kneighbors(tfidf_matrix[idx], n_neighbors=n+1)  # +1 untuk dirinya sendiri
 
     recommendations = []
-    for i in range(1, len(indices[0])):  # mulai dari 1 untuk skip dirinya sendiri
+    for i in range(1, len(indices[0])):  # Mulai dari 1 agar tidak menampilkan film itu sendiri
         rec_idx = indices[0][i]
         rec = df.iloc[rec_idx]
         recommendations.append({
-            'Judul'     : rec['movie title'],
-            'Rating'    : rec.get('Rating', ''),
-            'Generes'   : rec.get('Generes', ''),
-            'Deskripsi' : rec.get('Overview', ''),
-            'Writer'    : rec.get('Writer', ''),
-            'Director'  : rec.get('Director', '')
+            'Judul': rec['movie title'],
+            'Rating': rec.get('Rating', ''),
+            'Generes': rec.get('Generes', ''),
+            'Deskripsi': rec.get('Overview', ''),
+            'Writer': rec.get('Writer', ''),
+            'Director': rec.get('Director', '')
         })
     return recommendations
 
@@ -101,8 +101,17 @@ if st.button("🎯 Tampilkan Rekomendasi"):
         for rec in recommendations:
             with st.container():
                 st.markdown(f"### 🎥 {rec['Judul']}")
+
+                # Bersihkan Genre dari list string
                 if rec['Generes']:
-                    st.write(f"**Genre:** {rec['Generes']}")
+                    genre_clean = rec['Generes']
+                    if isinstance(genre_clean, str) and genre_clean.startswith('['):
+                        try:
+                            genre_clean = ', '.join(eval(genre_clean))
+                        except:
+                            genre_clean = genre_clean.strip("[]").replace("'", "").replace('"', '')
+                    st.write(f"**Genre:** {genre_clean}")
+
                 if rec['Rating']:
                     st.write(f"**Rating:** {rec['Rating']}")
                 if rec['Director']:
@@ -111,6 +120,7 @@ if st.button("🎯 Tampilkan Rekomendasi"):
                     st.write(f"**Writer:** {rec['Writer']}")
                 if rec['Deskripsi']:
                     st.info(rec['Deskripsi'])
+
                 st.markdown("---")
     else:
         st.warning(f"⚠️ Film '{title_input}' tidak ditemukan dalam dataset.")
