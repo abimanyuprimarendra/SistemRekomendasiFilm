@@ -11,7 +11,7 @@ from sklearn.neighbors import NearestNeighbors
 # ============================================
 @st.cache_data
 def load_data_from_gdrive():
-    file_id = "1muHUAK4oi5A16qj-lNkIREwkyAAhgVE5"  # ID file dari Google Drive
+    file_id = "1muHUAK4oi5A16qj-lNkIREwkyAAhgVE5"  # Ganti dengan ID milikmu
     url = f"https://drive.google.com/uc?id={file_id}"
     response = requests.get(url)
     if response.status_code != 200:
@@ -88,6 +88,7 @@ if st.button("🎯 Tampilkan Rekomendasi"):
 
         for i, rec in enumerate(recommendations[:5]):
             with cols[i]:
+                # Bersihkan genre jika list string
                 genre_clean = rec['Generes']
                 if isinstance(genre_clean, str) and genre_clean.startswith('['):
                     try:
@@ -95,25 +96,25 @@ if st.button("🎯 Tampilkan Rekomendasi"):
                     except:
                         genre_clean = genre_clean.strip("[]").replace("'", "").replace('"', '')
 
-                st.markdown(
-                    f"""
+                # Tampilkan card dengan tinggi tetap
+                st.markdown(f"""
                     <div style='
                         background-color: #fff;
+                        border-radius: 16px;
                         padding: 15px;
-                        border-radius: 12px;
-                        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-                        height: 100%;
+                        height: 320px;
+                        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
                         display: flex;
                         flex-direction: column;
                         justify-content: space-between;
                     '>
-                        <h4 style='color:#263238; margin-bottom: 0.5rem;'>🎞 {rec['Judul']}</h4>
-                        <div style='font-weight: bold;'>Genre: {genre_clean}</div>
-                        <div style='font-weight: bold;'>Rating: {rec['Rating']}</div>
-                        <p style='font-style: italic; font-size: 13px; color:#555; margin-top: 10px;'>{rec['Deskripsi'][:200]}...</p>
+                        <div>
+                            <h4 style='margin-bottom: 0.5rem;'>🎞 {rec['Judul']}</h4>
+                            <p style='margin: 0; font-weight: bold;'>Genre: {genre_clean}</p>
+                            <p style='margin: 0; font-weight: bold;'>Rating: {rec['Rating']}</p>
+                        </div>
+                        <p style='margin-top: 10px; font-style: italic; font-size: 13px; color: #555;'>{rec['Deskripsi'][:200]}...</p>
                     </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+                """, unsafe_allow_html=True)
     else:
         st.warning(f"⚠️ Film '{title_input}' tidak ditemukan dalam dataset.")
