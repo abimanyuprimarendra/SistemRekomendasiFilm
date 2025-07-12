@@ -8,19 +8,28 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 # ============================================
-# Fungsi: Load CSV dari Google Drive via file_id
+# Fungsi: Load Google Sheet sebagai CSV & Batasi
 # ============================================
 @st.cache_data
 def load_data_from_gdrive():
-    file_id = "1muHUAK4oi5A16qj-lNkIREwkyAAhgVE5"  # Ganti dengan ID milikmu
-    url = f"https://drive.google.com/uc?id={file_id}"
+    sheet_id = "1muHUAK4oi5A16qj-lNkIREwkyAAhgVE5"
+    gid = "0"  # biasanya 0 untuk sheet pertama
+    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
     response = requests.get(url)
 
     if response.status_code != 200:
-        st.error("❌ Gagal mengambil data dari Google Drive.")
+        st.error("❌ Gagal mengambil data dari Google Sheet.")
         return None
 
-    return pd.read_csv(io.BytesIO(response.content))
+    df = pd.read_csv(io.BytesIO(response.content))
+
+    # Batasi ke 5000 film berdasarkan rating tertinggi (jika kolom tersedia)
+    if 'Rating' in df.columns:
+        df = df.sort_values('Rating', ascending=False).head(5000)
+    else:
+        df = df.head(5000)
+
+    return df
 
 # ============================================
 # Fungsi: Preprocessing teks deskripsi
