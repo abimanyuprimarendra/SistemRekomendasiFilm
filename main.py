@@ -8,28 +8,28 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 # ============================================
-# Fungsi: Load Google Sheet sebagai CSV & Batasi
+# Fungsi: Load CSV dari Google Drive (bukan Sheet)
 # ============================================
 @st.cache_data
 def load_data_from_gdrive():
-    sheet_id = "1muHUAK4oi5A16qj-lNkIREwkyAAhgVE5"
-    gid = "0"  # biasanya 0 untuk sheet pertama
-    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
+    file_id = "1muHUAK4oi5A16qj-lNkIREwkyAAhgVE5"  # Ganti dengan ID file CSV di Google Drive
+    url = f"https://drive.google.com/uc?id={file_id}"
     response = requests.get(url)
 
     if response.status_code != 200:
-        st.error("❌ Gagal mengambil data dari Google Sheet.")
+        st.error("❌ Gagal mengambil data dari Google Drive.")
         return None
 
-    df = pd.read_csv(io.BytesIO(response.content))
-
-    # Batasi ke 5000 film berdasarkan rating tertinggi (jika kolom tersedia)
-    if 'Rating' in df.columns:
-        df = df.sort_values('Rating', ascending=False).head(5000)
-    else:
-        df = df.head(5000)
-
-    return df
+    try:
+        df = pd.read_csv(io.BytesIO(response.content))
+        if 'Rating' in df.columns:
+            df = df.sort_values('Rating', ascending=False).head(5000)
+        else:
+            df = df.head(5000)
+        return df
+    except Exception as e:
+        st.error(f"❌ Gagal memproses file CSV: {e}")
+        return None
 
 # ============================================
 # Fungsi: Preprocessing teks deskripsi
