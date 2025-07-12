@@ -11,7 +11,7 @@ from sklearn.neighbors import NearestNeighbors
 # ============================================
 @st.cache_data
 def load_data_from_gdrive():
-    file_id = "1muHUAK4oi5A16qj-lNkIREwkyAAhgVE5"  # Ganti dengan ID milikmu
+    file_id = "1muHUAK4oi5A16qj-lNkIREwkyAAhgVE5"  # ID file dari Google Drive
     url = f"https://drive.google.com/uc?id={file_id}"
     response = requests.get(url)
     if response.status_code != 200:
@@ -38,7 +38,7 @@ def recommend_nn(title, df, tfidf_matrix, nn_model, n=5):
     idx = df[match].index[0]
     distances, indices = nn_model.kneighbors(tfidf_matrix[idx], n_neighbors=n+1)
     recommendations = []
-    for i in range(1, len(indices[0])):  # skip diri sendiri
+    for i in range(1, len(indices[0])):  # skip dirinya sendiri
         rec = df.iloc[indices[0][i]]
         recommendations.append({
             'Judul': rec['movie title'],
@@ -52,7 +52,7 @@ def recommend_nn(title, df, tfidf_matrix, nn_model, n=5):
 # UI Streamlit
 # ============================================
 st.set_page_config(page_title="Sistem Rekomendasi Film", layout="wide")
-st.markdown("<h1 style='text-align: center;'>🎬 Sistem Rekomendasi Film</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center;'>🎬 Sistem Rekomendasi Film</h1>", unsafe_allow_html=True)
 
 # Load data
 df = load_data_from_gdrive()
@@ -70,21 +70,21 @@ df['deskripsi'] = df['deskripsi'].apply(preprocess_text)
 # TF-IDF & NearestNeighbors
 tfidf = TfidfVectorizer()
 tfidf_matrix = tfidf.fit_transform(df['deskripsi'])
-
 nn_model = NearestNeighbors(metric='cosine', algorithm='brute')
 nn_model.fit(tfidf_matrix)
 
-# Pilihan judul
+# Dropdown judul film
 title_input = st.selectbox("🎞 Pilih Judul Film:", sorted(df['movie title'].dropna().unique()))
 
-# Tampilkan rekomendasi
+# Tampilkan Rekomendasi
 if st.button("🎯 Tampilkan Rekomendasi"):
     recommendations = recommend_nn(title_input, df, tfidf_matrix, nn_model)
 
     if recommendations:
         st.markdown(f"<h3>🎯 5 Film Mirip '<span style='color:#950002'>{title_input}</span>'</h3>", unsafe_allow_html=True)
 
-        cols = st.columns(5)  # 5 kolom horizontal
+        # Horizontal layout 5 card
+        cols = st.columns(5)
 
         for i, rec in enumerate(recommendations[:5]):
             with cols[i]:
@@ -95,21 +95,25 @@ if st.button("🎯 Tampilkan Rekomendasi"):
                     except:
                         genre_clean = genre_clean.strip("[]").replace("'", "").replace('"', '')
 
-                st.markdown("""
+                st.markdown(
+                    f"""
                     <div style='
                         background-color: #fff;
                         padding: 15px;
                         border-radius: 12px;
                         box-shadow: 0 2px 6px rgba(0,0,0,0.05);
                         height: 100%;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: space-between;
                     '>
-                """, unsafe_allow_html=True)
-
-                st.markdown(f"### 🎞 {rec['Judul']}", unsafe_allow_html=True)
-                st.markdown(f"**Genre:** {genre_clean}")
-                st.markdown(f"**Rating:** {rec['Rating']}")
-                st.markdown(f"<span style='font-style: italic; font-size: 13px; color:#555'>{rec['Deskripsi'][:200]}...</span>", unsafe_allow_html=True)
-
-                st.markdown("</div>", unsafe_allow_html=True)
+                        <h4 style='color:#263238; margin-bottom: 0.5rem;'>🎞 {rec['Judul']}</h4>
+                        <div style='font-weight: bold;'>Genre: {genre_clean}</div>
+                        <div style='font-weight: bold;'>Rating: {rec['Rating']}</div>
+                        <p style='font-style: italic; font-size: 13px; color:#555; margin-top: 10px;'>{rec['Deskripsi'][:200]}...</p>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
     else:
         st.warning(f"⚠️ Film '{title_input}' tidak ditemukan dalam dataset.")
