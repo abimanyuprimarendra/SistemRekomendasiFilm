@@ -4,7 +4,7 @@ import re
 import requests
 import io
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.neighbors import NearestNeighbors
 
 # ============================================
 # Fungsi: Load CSV dari Google Drive
@@ -32,32 +32,33 @@ def load_data_from_gdrive():
 def preprocess_text(text):
     text = text.lower()
     text = re.sub(r'[^a-z\s]', '', text)
-    tokens = text.split()
-    return ' '.join(tokens)
+    return ' '.join(text.split())
 
 # ============================================
-# Fungsi: Rekomendasi berdasarkan cosine similarity
+# Fungsi: Rekomendasi menggunakan NearestNeighbors
 # ============================================
-def recommend_cosine(title, df, cosine_sim, n=5):
-    title_clean = re.sub(r'[^a-z\s]', '', title.lower())
-    try:
-        match = df['movie title'].apply(lambda x: re.sub(r'[^a-z\s]', '', str(x).lower()))
-        idx = df[match == title_clean].index[0]
-        sim_scores = list(enumerate(cosine_sim[idx]))
-        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)[1:n+1]
-        recommendations = []
-        for i, _ in sim_scores:
-            recommendations.append({
-                'Judul'     : df.iloc[i]['movie title'],
-                'Rating'    : df.iloc[i].get('Rating', ''),
-                'Generes'   : df.iloc[i].get('Generes', ''),
-                'Deskripsi' : df.iloc[i].get('Overview', ''),
-                'Writer'    : df.iloc[i].get('Writer', ''),
-                'Director'  : df.iloc[i].get('Director', '')
-            })
-        return recommendations
-    except IndexError:
+def recommend_nn(title, df, tfidf_matrix, nn_model, n=5):
+    title_clean = title.lower()
+    match = df['movie title'].str.lower() == title_clean
+    if not match.any():
         return None
+
+    idx = df[match].index[0]
+    distances, indices = nn_model.kneighbors(tfidf_matrix[idx], n_neighbors=n+1)  # +1 karena ada dirinya sendiri
+
+    recommendations = []
+    for i in range(1, len(indices[0])):  # mulai dari 1 untuk skip dirinya sendiri
+        rec_idx = indices[0][i]
+        rec = df.iloc[rec_idx]
+        recommendations.append({
+            'Judul'     : rec['movie title'],
+            'Rating'    : rec.get('Rating', ''),
+            'Generes'   : rec.get('Generes', ''),
+            'Deskripsi' : rec.get('Overview', ''),
+            'Writer'    : rec.get('Writer', ''),
+            'Director'  : rec.get('Director', '')
+        })
+    return recommendations
 
 # ============================================
 # UI Streamlit
@@ -79,10 +80,12 @@ for feature in features:
 df['deskripsi'] = df.apply(lambda row: ' '.join(str(row[feature]) for feature in features), axis=1)
 df['deskripsi'] = df['deskripsi'].apply(preprocess_text)
 
-# TF-IDF & cosine similarity
+# TF-IDF & NearestNeighbors
 tfidf = TfidfVectorizer()
 tfidf_matrix = tfidf.fit_transform(df['deskripsi'])
-cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
+
+nn_model = NearestNeighbors(metric='cosine', algorithm='brute')
+nn_model.fit(tfidf_matrix)
 
 # Dropdown pilihan film
 title_input = st.selectbox(
@@ -91,7 +94,7 @@ title_input = st.selectbox(
 )
 
 if st.button("🎯 Tampilkan Rekomendasi"):
-    recommendations = recommend_cosine(title_input, df, cosine_sim)
+    recommendations = recommend_nn(title_input, df, tfidf_matrix, nn_model)
 
     if recommendations:
         st.subheader(f"📌 Rekomendasi untuk: **{title_input}**")
