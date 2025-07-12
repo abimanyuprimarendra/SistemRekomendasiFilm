@@ -60,7 +60,7 @@ def recommend_cosine(title, df, cosine_sim, n=5):
 # UI Streamlit
 # ============================================
 st.set_page_config(page_title="Sistem Rekomendasi Film", layout="wide")
-st.title("🎬Sistem Rekomendasi Film")
+st.title("🎬 Sistem Rekomendasi Film")
 
 # Load data
 df = load_data_from_gdrive()
@@ -85,8 +85,11 @@ tfidf = TfidfVectorizer()
 tfidf_matrix = tfidf.fit_transform(df['deskripsi'])
 cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
 
-# Input user
-title_input = st.text_input("🎞 Masukkan Judul Film:", "Spider-Man")
+# Dropdown pilihan film
+title_input = st.selectbox(
+    "🎞 Pilih Judul Film untuk Rekomendasi:",
+    sorted(df['movie title'].dropna().unique())
+)
 
 if st.button("🎯 Tampilkan Rekomendasi"):
     recommendations = recommend_cosine(title_input, df, cosine_sim)
