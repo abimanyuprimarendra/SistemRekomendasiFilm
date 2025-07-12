@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import re
 import requests
 import io
@@ -8,11 +7,11 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 # ============================================
-# Fungsi: Load CSV dari Google Drive (bukan Sheet)
+# Fungsi: Load CSV dari Google Drive
 # ============================================
 @st.cache_data
 def load_data_from_gdrive():
-    file_id = "1muHUAK4oi5A16qj-lNkIREwkyAAhgVE5"  # Ganti dengan ID file CSV di Google Drive
+    file_id = "1muHUAK4oi5A16qj-lNkIREwkyAAhgVE5"  # Ganti dengan ID file CSV kamu
     url = f"https://drive.google.com/uc?id={file_id}"
     response = requests.get(url)
 
@@ -22,10 +21,6 @@ def load_data_from_gdrive():
 
     try:
         df = pd.read_csv(io.BytesIO(response.content))
-        if 'Rating' in df.columns:
-            df = df.sort_values('Rating', ascending=False).head(5000)
-        else:
-            df = df.head(5000)
         return df
     except Exception as e:
         st.error(f"❌ Gagal memproses file CSV: {e}")
@@ -51,15 +46,14 @@ def recommend_cosine(title, df, cosine_sim, n=5):
         sim_scores = list(enumerate(cosine_sim[idx]))
         sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)[1:n+1]
         recommendations = []
-        for i, score in sim_scores:
+        for i, _ in sim_scores:
             recommendations.append({
                 'Judul'     : df.iloc[i]['movie title'],
-                'Rating'    : df.iloc[i].get('Rating', 'N/A'),
+                'Rating'    : df.iloc[i].get('Rating', ''),
                 'Generes'   : df.iloc[i].get('Generes', ''),
                 'Deskripsi' : df.iloc[i].get('Overview', ''),
                 'Writer'    : df.iloc[i].get('Writer', ''),
-                'Director'  : df.iloc[i].get('Director', ''),
-                'Similarity': round(score, 4)
+                'Director'  : df.iloc[i].get('Director', '')
             })
         return recommendations
     except IndexError:
@@ -76,17 +70,13 @@ df = load_data_from_gdrive()
 if df is None:
     st.stop()
 
-# Tampilkan data awal (opsional)
-with st.expander("🔍 Lihat Data Mentah"):
-    st.dataframe(df.head())
-
 # Isi kosong jadi string
 features = ['movie title', 'Generes', 'Director', 'Writer']
 for feature in features:
     df[feature] = df[feature].fillna('')
 
 # Gabung semua fitur jadi 1 deskripsi
-df['deskripsi'] = df.apply(lambda row: ' '.join(row[feature] for feature in features), axis=1)
+df['deskripsi'] = df.apply(lambda row: ' '.join(str(row[feature]) for feature in features), axis=1)
 df['deskripsi'] = df['deskripsi'].apply(preprocess_text)
 
 # TF-IDF & cosine similarity
@@ -108,12 +98,16 @@ if st.button("🎯 Tampilkan Rekomendasi"):
         for rec in recommendations:
             with st.container():
                 st.markdown(f"### 🎥 {rec['Judul']}")
-                st.write(f"**Genre:** {rec['Generes']}")
-                st.write(f"**Rating:** {rec['Rating']}")
-                st.write(f"**Director:** {rec['Director']}")
-                st.write(f"**Writer:** {rec['Writer']}")
-                st.write(f"**Similarity Score:** {rec['Similarity']}")
-                st.info(rec['Deskripsi'])
+                if rec['Generes']:
+                    st.write(f"**Genre:** {rec['Generes']}")
+                if rec['Rating']:
+                    st.write(f"**Rating:** {rec['Rating']}")
+                if rec['Director']:
+                    st.write(f"**Director:** {rec['Director']}")
+                if rec['Writer']:
+                    st.write(f"**Writer:** {rec['Writer']}")
+                if rec['Deskripsi']:
+                    st.info(rec['Deskripsi'])
                 st.markdown("---")
     else:
         st.warning(f"⚠️ Film '{title_input}' tidak ditemukan dalam dataset.")
