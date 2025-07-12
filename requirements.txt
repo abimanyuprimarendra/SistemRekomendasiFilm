@@ -4,3 +4,4 @@ scikit-learn
 numpy              
 nltk                
 joblib  
+request
