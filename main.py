@@ -59,8 +59,8 @@ def recommend_cosine(title, df, cosine_sim, n=5):
 # ============================================
 # UI Streamlit
 # ============================================
-st.set_page_config(page_title="Rekomendasi Film IMDb", layout="wide")
-st.title("🎬 Sistem Rekomendasi Film IMDb")
+st.set_page_config(page_title="Sistem Rekomendasi Film", layout="wide")
+st.title("🎬Sistem Rekomendasi Film")
 
 # Load data
 df = load_data_from_gdrive()
