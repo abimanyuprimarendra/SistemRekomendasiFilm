@@ -76,7 +76,10 @@ if search:
         image_url = "https://raw.githubusercontent.com/abimanyuprimarendra/SistemRekomendasiFilm/main/gambar.jpeg"
 
         # Tentukan jumlah kolom berdasarkan lebar layar (responsif)
-         cols = st.columns(5)
+                # Tentukan jumlah kolom berdasarkan lebar layar (responsif)
+        screen_width = st.get_option("browser.clientWidth")
+        if screen_width < 768:
+        cols = st.columns(5)
 
 
         for i, rec in enumerate(recommendations[:5]):
