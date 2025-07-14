@@ -103,7 +103,7 @@ if search:
                                 <p style='margin: 2px 0; font-size: 13px;'><strong>Genre:</strong> {genre_clean}</p>
                                 <p style='margin: 2px 0; font-size: 13px;'><strong>Rating:</strong> {rec['Rating']}</p>
                             </div>
-                            <div style='margin-top: 2px;'>
+                            <div style='margin-top: 12px;'>
                                 <p style='font-size: 12px; color: #444; line-height: 1.4; margin: 0;'>{rec['Deskripsi'][:180]}...</p>
                             </div>
                         </div>
