@@ -90,7 +90,7 @@ if search:
                         background-color: #ffffff;
                         border-radius: 16px;
                         padding: 14px;
-                        height: 410px;
+                        height: 350px;
                         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
                         display: flex;
                         flex-direction: column;
