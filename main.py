@@ -104,7 +104,7 @@ if search:
                                 <p style='margin: 2px 0; font-size: 13px;'><strong>Rating:</strong> {rec['Rating']}</p>
                             </div>
                             <div style='margin-top: 2px;'>
-                                <p style='font-size: 12px; color: #444; line-height: 1.4; margin: 0;'>{rec['Deskripsi'][:180]}...</p>
+                                <p style='font-size: 12px; color: #444; line-height: 1.25; margin: 0;'>{rec['Deskripsi'][:180]}...</p>
                             </div>
                         </div>
                     </div>
