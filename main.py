@@ -59,13 +59,15 @@ tfidf_matrix = tfidf.fit_transform(df['deskripsi'])
 nn_model = NearestNeighbors(metric='cosine', algorithm='brute')
 nn_model.fit(tfidf_matrix)
 
-# Sidebar
+# ============================================
+# Sidebar input
 with st.sidebar:
     st.subheader("🎞 Pilih Judul Film")
     selected_title = st.selectbox("", sorted(df['movie title'].dropna().unique()))
     search = st.button("Cari Rekomendasi")
 
 # ============================================
+# Rekomendasi Film
 if search:
     recommendations = recommend_nn(selected_title, df, tfidf_matrix, nn_model)
     if recommendations:
@@ -83,33 +85,33 @@ if search:
                     except:
                         genre_clean = genre_clean.strip("[]").replace("'", "").replace('"', '')
 
-   st.markdown(f"""
-    <div style='
-        background-color: #ffffff;
-        border-radius: 16px;
-        padding: 14px;
-        height: 410px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        align-items: center;
-        text-align: left;
-    '>
-        <img src="{image_url}" style="width: 100%; height: 110px; border-radius: 10px; object-fit: cover; margin-bottom: 8px;" />
-        <div style='width: 100%; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;'>
-            <div>
-                <h4 style='margin: 0 0 4px 0; font-size: 15px;'>🎬 {rec['Judul']}</h4>
-                <p style='margin: 0; font-size: 13px;'><strong>Genre:</strong> {genre_clean}</p>
-                <p style='margin: 0 0 6px 0; font-size: 13px;'><strong>Rating:</strong> {rec['Rating']}</p>
-            </div>
-            <div style='margin-top: 6px;'>
-                <p style='font-size: 12px; color: #444; line-height: 1.25; margin: 0; text-align: justify;'>
-                    {rec['Deskripsi'][:180]}...
-                </p>
-            </div>
-        </div>
-    </div>
-""", unsafe_allow_html=True)
+                st.markdown(f"""
+                    <div style='
+                        background-color: #ffffff;
+                        border-radius: 16px;
+                        padding: 14px;
+                        height: 410px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: flex-start;
+                        align-items: center;
+                        text-align: left;
+                    '>
+                        <img src="{image_url}" style="width: 100%; height: 110px; border-radius: 10px; object-fit: cover; margin-bottom: 8px;" />
+                        <div style='width: 100%; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;'>
+                            <div>
+                                <h4 style='margin: 0 0 4px 0; font-size: 15px;'>🎬 {rec['Judul']}</h4>
+                                <p style='margin: 0; font-size: 13px;'><strong>Genre:</strong> {genre_clean}</p>
+                                <p style='margin: 0 0 6px 0; font-size: 13px;'><strong>Rating:</strong> {rec['Rating']}</p>
+                            </div>
+                            <div style='margin-top: 6px;'>
+                                <p style='font-size: 12px; color: #444; line-height: 1.25; margin: 0; text-align: justify;'>
+                                    {rec['Deskripsi'][:180]}...
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
     else:
         st.warning(f"⚠ Film '{selected_title}' tidak ditemukan dalam dataset.")
