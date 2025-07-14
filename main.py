@@ -78,7 +78,7 @@ nn_model.fit(tfidf_matrix)
 with st.sidebar:
     st.subheader("🎞 Pilih Judul Film")
     selected_title = st.selectbox("", sorted(df['movie title'].dropna().unique()))
-    search = st.button("🎯 Tampilkan Rekomendasi")
+    search = st.button("Cari Rekomendasi")
 
 # ============================================
 # Tampilkan Rekomendasi jika tombol diklik
