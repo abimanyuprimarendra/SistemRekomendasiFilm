@@ -7,8 +7,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
 
 # ============================================
-# Load Dataset dari Google Drive
-# ============================================
 @st.cache_data
 def load_data_from_gdrive():
     file_id = "1muHUAK4oi5A16qj-lNkIREwkyAAhgVE5"
@@ -19,17 +17,11 @@ def load_data_from_gdrive():
         return None
     return pd.read_csv(io.BytesIO(response.content))
 
-# ============================================
-# Preprocessing teks deskripsi
-# ============================================
 def preprocess_text(text):
     text = text.lower()
     text = re.sub(r'[^a-z\s]', '', text)
     return ' '.join(text.split())
 
-# ============================================
-# Rekomendasi Film
-# ============================================
 def recommend_nn(title, df, tfidf_matrix, nn_model, n=5):
     title_clean = title.lower()
     match = df['movie title'].str.lower() == title_clean
@@ -49,14 +41,9 @@ def recommend_nn(title, df, tfidf_matrix, nn_model, n=5):
     return recommendations
 
 # ============================================
-# Konfigurasi Streamlit
-# ============================================
 st.set_page_config(page_title="Sistem Rekomendasi Film", layout="wide")
 st.markdown("<h1 style='text-align:center;'>🎬 Sistem Rekomendasi Film</h1>", unsafe_allow_html=True)
 
-# ============================================
-# Load dan proses data
-# ============================================
 df = load_data_from_gdrive()
 if df is None:
     st.stop()
@@ -72,16 +59,12 @@ tfidf_matrix = tfidf.fit_transform(df['deskripsi'])
 nn_model = NearestNeighbors(metric='cosine', algorithm='brute')
 nn_model.fit(tfidf_matrix)
 
-# ============================================
-# Sidebar: Pilih judul dan tombol cari
-# ============================================
+# Sidebar
 with st.sidebar:
     st.subheader("🎞 Pilih Judul Film")
     selected_title = st.selectbox("", sorted(df['movie title'].dropna().unique()))
     search = st.button("Cari Rekomendasi")
 
-# ============================================
-# Tampilkan Rekomendasi jika tombol diklik
 # ============================================
 if search:
     recommendations = recommend_nn(selected_title, df, tfidf_matrix, nn_model)
@@ -89,7 +72,7 @@ if search:
         st.markdown(f"<h3>🎯 5 Film Mirip '<span style='color:#950002'>{selected_title}</span>'</h3>", unsafe_allow_html=True)
 
         image_url = "https://raw.githubusercontent.com/abimanyuprimarendra/SistemRekomendasiFilm/main/gambar.jpeg"
-        cols = st.columns(5)  # 5 card sejajar horizontal
+        cols = st.columns(5)
 
         for i, rec in enumerate(recommendations[:5]):
             with cols[i]:
@@ -104,20 +87,25 @@ if search:
                     <div style='
                         background-color: #ffffff;
                         border-radius: 16px;
-                        padding: 16px;
-                        height: 420px;
+                        padding: 15px;
+                        height: 430px;
                         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
                         display: flex;
                         flex-direction: column;
-                        justify-content: space-between;
+                        justify-content: start;
+                        align-items: center;
                         text-align: left;
                     '>
                         <img src="{image_url}" style="width: 100%; height: 120px; border-radius: 10px; object-fit: cover; margin-bottom: 10px;" />
-                        <div>
-                            <h4 style='margin: 0;'>🎬 {rec['Judul']}</h4>
-                            <p style='margin: 4px 0; font-weight: bold;'>Genre: {genre_clean}</p>
-                            <p style='margin: 4px 0; font-weight: bold;'>Rating: {rec['Rating']}</p>
-                            <p style='font-size: 12px; color: #444; margin-top: 8px;'>{rec['Deskripsi'][:150]}...</p>
+                        <div style='width: 100%; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;'>
+                            <div>
+                                <h4 style='margin: 0 0 6px 0; font-size: 16px;'>🎬 {rec['Judul']}</h4>
+                                <p style='margin: 2px 0; font-size: 13px;'><strong>Genre:</strong> {genre_clean}</p>
+                                <p style='margin: 2px 0; font-size: 13px;'><strong>Rating:</strong> {rec['Rating']}</p>
+                            </div>
+                            <div style='margin-top: 10px;'>
+                                <p style='font-size: 12px; color: #444; line-height: 1.4; margin: 0;'>{rec['Deskripsi'][:180]}...</p>
+                            </div>
                         </div>
                     </div>
                 """, unsafe_allow_html=True)
