@@ -49,94 +49,66 @@ def recommend_nn(title, df, tfidf_matrix, nn_model, n=5):
     return recommendations
 
 # ============================================
-# Konfigurasi dan Navigasi
+# Streamlit UI
 # ============================================
 st.set_page_config(page_title="Sistem Rekomendasi Film", layout="wide")
-nav = st.sidebar.radio("Navigasi", ["🎬 Rekomendasi Film", "ℹ Tentang Aplikasi"])
+st.markdown("<h1 style='text-align:center;'>🎬 Sistem Rekomendasi Film</h1>", unsafe_allow_html=True)
 
-# ============================================
-# Halaman Rekomendasi Film
-# ============================================
-if nav == "🎬 Rekomendasi Film":
-    st.markdown("<h1 style='text-align:center;'>🎬 Sistem Rekomendasi Film</h1>", unsafe_allow_html=True)
+df = load_data_from_gdrive()
+if df is None:
+    st.stop()
 
-    df = load_data_from_gdrive()
-    if df is None:
-        st.stop()
+for feature in ['movie title', 'Generes', 'Director', 'Writer']:
+    df[feature] = df[feature].fillna('')
 
-    for feature in ['movie title', 'Generes', 'Director', 'Writer']:
-        df[feature] = df[feature].fillna('')
+df['deskripsi'] = df.apply(lambda row: ' '.join(str(row[feature]) for feature in ['movie title', 'Generes', 'Director', 'Writer']), axis=1)
+df['deskripsi'] = df['deskripsi'].apply(preprocess_text)
 
-    df['deskripsi'] = df.apply(lambda row: ' '.join(str(row[feature]) for feature in ['movie title', 'Generes', 'Director', 'Writer']), axis=1)
-    df['deskripsi'] = df['deskripsi'].apply(preprocess_text)
+tfidf = TfidfVectorizer()
+tfidf_matrix = tfidf.fit_transform(df['deskripsi'])
+nn_model = NearestNeighbors(metric='cosine', algorithm='brute')
+nn_model.fit(tfidf_matrix)
 
-    tfidf = TfidfVectorizer()
-    tfidf_matrix = tfidf.fit_transform(df['deskripsi'])
-    nn_model = NearestNeighbors(metric='cosine', algorithm='brute')
-    nn_model.fit(tfidf_matrix)
+title_input = st.selectbox("🎞 Pilih Judul Film:", sorted(df['movie title'].dropna().unique()))
 
-    title_input = st.selectbox("🎞 Pilih Judul Film:", sorted(df['movie title'].dropna().unique()))
+if st.button("🎯 Tampilkan Rekomendasi"):
+    recommendations = recommend_nn(title_input, df, tfidf_matrix, nn_model)
 
-    if st.button("🎯 Tampilkan Rekomendasi"):
-        recommendations = recommend_nn(title_input, df, tfidf_matrix, nn_model)
+    if recommendations:
+        st.markdown(f"<h3>🎯 5 Film Mirip '<span style='color:#950002'>{title_input}</span>'</h3>", unsafe_allow_html=True)
 
-        if recommendations:
-            st.markdown(f"<h3>🎯 5 Film Mirip '<span style='color:#950002'>{title_input}</span>'</h3>", unsafe_allow_html=True)
+        cols = st.columns(5)
 
-            # Gambar dari GitHub (banner)
-            st.markdown("""
-                <div style='text-align: center; margin-bottom: 20px;'>
-                    <img src='https://raw.githubusercontent.com/abimanyuprimarendra/SistemRekomendasiFilm/main/gambar.jpeg' width='100%' 
-                         style='border-radius: 10px; max-height: 240px; object-fit: cover;' />
-                </div>
-            """, unsafe_allow_html=True)
+        image_url = "https://raw.githubusercontent.com/abimanyuprimarendra/SistemRekomendasiFilm/main/gambar.jpeg"
 
-            cols = st.columns(5)
-            for i, rec in enumerate(recommendations[:5]):
-                with cols[i]:
-                    genre_clean = rec['Generes']
-                    if isinstance(genre_clean, str) and genre_clean.startswith('['):
-                        try:
-                            genre_clean = ', '.join(eval(genre_clean))
-                        except:
-                            genre_clean = genre_clean.strip("[]").replace("'", "").replace('"', '')
+        for i, rec in enumerate(recommendations[:5]):
+            with cols[i]:
+                genre_clean = rec['Generes']
+                if isinstance(genre_clean, str) and genre_clean.startswith('['):
+                    try:
+                        genre_clean = ', '.join(eval(genre_clean))
+                    except:
+                        genre_clean = genre_clean.strip("[]").replace("'", "").replace('"', '')
 
-                    st.markdown(f"""
-                        <div style='
-                            background-color: #fff;
-                            border-radius: 16px;
-                            padding: 15px;
-                            height: 320px;
-                            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-                            display: flex;
-                            flex-direction: column;
-                            justify-content: space-between;
-                        '>
-                            <div>
-                                <h4 style='margin-bottom: 0.5rem;'>🎞 {rec['Judul']}</h4>
-                                <p style='margin: 0; font-weight: bold;'>Genre: {genre_clean}</p>
-                                <p style='margin: 0; font-weight: bold;'>Rating: {rec['Rating']}</p>
-                            </div>
-                            <p style='margin-top: 10px; font-style: italic; font-size: 13px; color: #555;'>{rec['Deskripsi'][:200]}...</p>
+                st.markdown(f"""
+                    <div style='
+                        background-color: #fff;
+                        border-radius: 16px;
+                        padding: 15px;
+                        height: 420px;
+                        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: space-between;
+                    '>
+                        <div>
+                            <img src="{image_url}" style="width: 100%; border-radius: 8px; margin-bottom: 10px; max-height: 120px; object-fit: cover;" />
+                            <h4 style='margin-bottom: 0.5rem;'>🎞 {rec['Judul']}</h4>
+                            <p style='margin: 0; font-weight: bold;'>Genre: {genre_clean}</p>
+                            <p style='margin: 0; font-weight: bold;'>Rating: {rec['Rating']}</p>
                         </div>
-                    """, unsafe_allow_html=True)
-        else:
-            st.warning(f"⚠ Film '{title_input}' tidak ditemukan dalam dataset.")
-
-# ============================================
-# Halaman Tentang Aplikasi
-# ============================================
-elif nav == "ℹ Tentang Aplikasi":
-    st.markdown("<h1 style='text-align:center;'>ℹ Tentang Aplikasi</h1>", unsafe_allow_html=True)
-    st.markdown("""
-    <p style='font-size: 18px;'>
-        Aplikasi ini merupakan sistem rekomendasi film yang dibangun menggunakan pendekatan 
-        <strong>Content-Based Filtering</strong> dengan algoritma <strong>TF-IDF</strong> dan <strong>KNN (K-Nearest Neighbors)</strong>.
-    </p>
-    <ul style='font-size: 17px;'>
-        <li>🔎 Memanfaatkan deskripsi film dan metadata seperti genre, sutradara, dan penulis.</li>
-        <li>📊 Dapat membantu pengguna menemukan film serupa berdasarkan satu film yang dipilih.</li>
-        <li>💡 Dikembangkan menggunakan Python dan framework <strong>Streamlit</strong>.</li>
-    </ul>
-    <p style='font-size: 17px;'>Dikembangkan oleh: <strong>Abimanyu Primarendra</strong></p>
-    """, unsafe_allow_html=True)
+                        <p style='margin-top: 10px; font-style: italic; font-size: 13px; color: #555;'>{rec['Deskripsi'][:200]}...</p>
+                    </div>
+                """, unsafe_allow_html=True)
+    else:
+        st.warning(f"⚠ Film '{title_input}' tidak ditemukan dalam dataset.")
