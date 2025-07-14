@@ -20,7 +20,7 @@ def load_data_from_gdrive():
     return pd.read_csv(io.BytesIO(response.content))
 
 # ============================================
-# Preprocessing Teks
+# Preprocessing teks deskripsi
 # ============================================
 def preprocess_text(text):
     text = text.lower()
@@ -49,12 +49,14 @@ def recommend_nn(title, df, tfidf_matrix, nn_model, n=5):
     return recommendations
 
 # ============================================
-# Konfigurasi Layout
+# Konfigurasi Streamlit
 # ============================================
 st.set_page_config(page_title="Sistem Rekomendasi Film", layout="wide")
-
 st.markdown("<h1 style='text-align:center;'>🎬 Sistem Rekomendasi Film</h1>", unsafe_allow_html=True)
 
+# ============================================
+# Load dan proses data
+# ============================================
 df = load_data_from_gdrive()
 if df is None:
     st.stop()
@@ -71,23 +73,24 @@ nn_model = NearestNeighbors(metric='cosine', algorithm='brute')
 nn_model.fit(tfidf_matrix)
 
 # ============================================
-# Sidebar: Pilih Judul Film
+# Sidebar: Pilih judul dan tombol cari
 # ============================================
-selected_title = st.sidebar.selectbox("🎞 Pilih Judul Film:", sorted(df['movie title'].dropna().unique()))
+with st.sidebar:
+    st.subheader("🎞 Pilih Judul Film")
+    selected_title = st.selectbox("", sorted(df['movie title'].dropna().unique()))
+    search = st.button("🎯 Tampilkan Rekomendasi")
 
 # ============================================
-# Tampilkan Rekomendasi Otomatis
+# Tampilkan Rekomendasi jika tombol diklik
 # ============================================
-recommendations = recommend_nn(selected_title, df, tfidf_matrix, nn_model)
+if search:
+    recommendations = recommend_nn(selected_title, df, tfidf_matrix, nn_model)
+    if recommendations:
+        st.markdown(f"<h3>🎯 5 Film Mirip '<span style='color:#950002'>{selected_title}</span>'</h3>", unsafe_allow_html=True)
 
-if recommendations:
-    st.markdown(f"<h3>🎯 5 Film Mirip '<span style='color:#950002'>{selected_title}</span>'</h3>", unsafe_allow_html=True)
+        image_url = "https://raw.githubusercontent.com/abimanyuprimarendra/SistemRekomendasiFilm/main/gambar.jpeg"
 
-    image_url = "https://raw.githubusercontent.com/abimanyuprimarendra/SistemRekomendasiFilm/main/gambar.jpeg"
-    cols = st.columns(5)
-
-    for i, rec in enumerate(recommendations[:5]):
-        with cols[i]:
+        for rec in recommendations:
             genre_clean = rec['Generes']
             if isinstance(genre_clean, str) and genre_clean.startswith('['):
                 try:
@@ -97,23 +100,28 @@ if recommendations:
 
             st.markdown(f"""
                 <div style='
-                    background-color: #fff;
+                    background-color: #ffffff;
                     border-radius: 16px;
-                    padding: 15px;
-                    height: 420px;
-                    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+                    padding: 20px;
+                    margin-bottom: 25px;
+                    box-shadow: 0 6px 16px rgba(0,0,0,0.1);
                     display: flex;
-                    flex-direction: column;
-                    justify-content: space-between;
+                    flex-direction: row;
+                    gap: 20px;
+                    flex-wrap: wrap;
                 '>
-                    <div>
-                        <img src="{image_url}" style="width: 100%; border-radius: 8px; margin-bottom: 10px; max-height: 120px; object-fit: cover;" />
-                        <h4 style='margin-bottom: 0.5rem;'>🎞 {rec['Judul']}</h4>
-                        <p style='margin: 0; font-weight: bold;'>Genre: {genre_clean}</p>
-                        <p style='margin: 0; font-weight: bold;'>Rating: {rec['Rating']}</p>
+                    <div style="flex: 0 0 200px;">
+                        <img src="{image_url}" style="width: 100%; height: auto; border-radius: 12px; object-fit: cover;" />
                     </div>
-                    <p style='margin-top: 10px; font-style: italic; font-size: 13px; color: #555;'>{rec['Deskripsi'][:200]}...</p>
+                    <div style="flex: 1;">
+                        <h4 style='margin-top: 0;'>🎬 {rec['Judul']}</h4>
+                        <p style='margin: 4px 0;'><strong>Genre:</strong> {genre_clean}</p>
+                        <p style='margin: 4px 0;'><strong>Rating:</strong> {rec['Rating']}</p>
+                        <p style='margin-top: 12px; color: #444; font-size: 15px; line-height: 1.5;'>
+                            {rec['Deskripsi'][:400]}...
+                        </p>
+                    </div>
                 </div>
             """, unsafe_allow_html=True)
-else:
-    st.warning(f"⚠ Film '{selected_title}' tidak ditemukan dalam dataset.")
+    else:
+        st.warning(f"⚠ Film '{selected_title}' tidak ditemukan dalam dataset.")
