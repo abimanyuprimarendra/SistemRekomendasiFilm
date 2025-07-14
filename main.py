@@ -74,7 +74,17 @@ if search:
         st.markdown(f"<h3>🎯 5 Film Mirip '<span style='color:#950002'>{selected_title}</span>'</h3>", unsafe_allow_html=True)
 
         image_url = "https://raw.githubusercontent.com/abimanyuprimarendra/SistemRekomendasiFilm/main/gambar.jpeg"
-        cols = st.columns(5)
+
+        # Tentukan jumlah kolom berdasarkan lebar layar (responsif)
+        screen_width = st.get_option("browser.clientWidth")
+        if screen_width < 768:
+            cols = st.columns(1)
+        elif screen_width < 992:
+            cols = st.columns(2)
+        elif screen_width < 1200:
+            cols = st.columns(3)
+        else:
+            cols = st.columns(5)
 
         for i, rec in enumerate(recommendations[:5]):
             with cols[i]:
@@ -90,7 +100,7 @@ if search:
                         background-color: #ffffff;
                         border-radius: 16px;
                         padding: 14px;
-                        height: 350px;
+                        min-height: 360px;
                         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
                         display: flex;
                         flex-direction: column;
