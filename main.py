@@ -101,7 +101,7 @@ if search:
                         <img src="{image_url}" style="width: 100%; height: 110px; border-radius: 10px; object-fit: cover; margin-bottom: 8px;" />
                         <div style='width: 100%; flex-grow: 1; display: flex; flex-direction: column; '>
                             <div>
-                                <h4 style='margin: 0 0 4px 0; font-size: 17px; font-weight: bold;'>🎬 {rec['Judul']}</h4>
+                                <h4 style='margin: 0 0 4px 0; font-size: 18px; font-weight: bold;'>🎬 {rec['Judul']}</h4>
                                 <p style='margin: 0; font-size: 13px;'><strong>Genre:</strong> {genre_clean}</p>
                                 <p style='margin: 0 0 6px 0; font-size: 13px;'><strong>Rating:</strong> {rec['Rating']}</p>
                             </div>
