@@ -99,7 +99,7 @@ if search:
                         text-align: left;
                     '>
                         <img src="{image_url}" style="width: 100%; height: 110px; border-radius: 10px; object-fit: cover; margin-bottom: 8px;" />
-                        <div style='width: 100%; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;'>
+                        <div style='width: 100%; flex-grow: 1; display: flex; flex-direction: column; '>
                             <div>
                                 <h4 style='margin: 0 0 4px 0; font-size: 15px;'>🎬 {rec['Judul']}</h4>
                                 <p style='margin: 0; font-size: 13px;'><strong>Genre:</strong> {genre_clean}</p>
