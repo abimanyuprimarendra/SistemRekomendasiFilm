@@ -83,31 +83,33 @@ if search:
                     except:
                         genre_clean = genre_clean.strip("[]").replace("'", "").replace('"', '')
 
-                st.markdown(f"""
-                    <div style='
-                        background-color: #ffffff;
-                        border-radius: 16px;
-                        padding: 15px;
-                        height: 430px;
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: start;
-                        align-items: center;
-                        text-align: left;
-                    '>
-                        <img src="{image_url}" style="width: 100%; height: 120px; border-radius: 10px; object-fit: cover; margin-bottom: 10px;" />
-                        <div style='width: 100%; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;'>
-                            <div>
-                                <h4 style='margin: 0 0 6px 0; font-size: 16px;'>🎬 {rec['Judul']}</h4>
-                                <p style='margin: 2px 0; font-size: 13px;'><strong>Genre:</strong> {genre_clean}</p>
-                                <p style='margin: 2px 0; font-size: 13px;'><strong>Rating:</strong> {rec['Rating']}</p>
-                            </div>
-                            <div style='margin-top: 2px;'>
-                                <p style='font-size: 12px; color: #444; line-height: 1.25; margin: 0;'>{rec['Deskripsi'][:180]}...</p>
-                            </div>
-                        </div>
-                    </div>
-                """, unsafe_allow_html=True)
+   st.markdown(f"""
+    <div style='
+        background-color: #ffffff;
+        border-radius: 16px;
+        padding: 14px;
+        height: 410px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        text-align: left;
+    '>
+        <img src="{image_url}" style="width: 100%; height: 110px; border-radius: 10px; object-fit: cover; margin-bottom: 8px;" />
+        <div style='width: 100%; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;'>
+            <div>
+                <h4 style='margin: 0 0 4px 0; font-size: 15px;'>🎬 {rec['Judul']}</h4>
+                <p style='margin: 0; font-size: 13px;'><strong>Genre:</strong> {genre_clean}</p>
+                <p style='margin: 0 0 6px 0; font-size: 13px;'><strong>Rating:</strong> {rec['Rating']}</p>
+            </div>
+            <div style='margin-top: 6px;'>
+                <p style='font-size: 12px; color: #444; line-height: 1.25; margin: 0; text-align: justify;'>
+                    {rec['Deskripsi'][:180]}...
+                </p>
+            </div>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
     else:
         st.warning(f"⚠ Film '{selected_title}' tidak ditemukan dalam dataset.")
