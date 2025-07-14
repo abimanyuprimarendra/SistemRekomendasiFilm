@@ -1,5 +1,4 @@
 import streamlit as st
-from streamlit_option_menu import option_menu
 import pandas as pd
 import re
 import requests
@@ -8,7 +7,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
 
 # ============================================
-# Fungsi: Load CSV dari Google Drive
+# Load Dataset dari Google Drive
 # ============================================
 @st.cache_data
 def load_data_from_gdrive():
@@ -21,7 +20,7 @@ def load_data_from_gdrive():
     return pd.read_csv(io.BytesIO(response.content))
 
 # ============================================
-# Fungsi: Preprocessing teks deskripsi
+# Preprocessing Teks
 # ============================================
 def preprocess_text(text):
     text = text.lower()
@@ -29,7 +28,7 @@ def preprocess_text(text):
     return ' '.join(text.split())
 
 # ============================================
-# Fungsi: Rekomendasi Film
+# Rekomendasi Film
 # ============================================
 def recommend_nn(title, df, tfidf_matrix, nn_model, n=5):
     title_clean = title.lower()
@@ -50,83 +49,71 @@ def recommend_nn(title, df, tfidf_matrix, nn_model, n=5):
     return recommendations
 
 # ============================================
-# Layout: Konfigurasi
+# Konfigurasi Layout
 # ============================================
 st.set_page_config(page_title="Sistem Rekomendasi Film", layout="wide")
 
-# ============================================
-# Navbar Vertikal di Kiri
-# ============================================
-with st.sidebar:
-    selected = option_menu(
-        "Navigasi",
-        ["🎬 Rekomendasi Film"],
-        icons=["film"],
-        menu_icon="cast",
-        default_index=0,
-        orientation="vertical"
-    )
+st.markdown("<h1 style='text-align:center;'>🎬 Sistem Rekomendasi Film</h1>", unsafe_allow_html=True)
+
+df = load_data_from_gdrive()
+if df is None:
+    st.stop()
+
+for feature in ['movie title', 'Generes', 'Director', 'Writer']:
+    df[feature] = df[feature].fillna('')
+
+df['deskripsi'] = df.apply(lambda row: ' '.join(str(row[feature]) for feature in ['movie title', 'Generes', 'Director', 'Writer']), axis=1)
+df['deskripsi'] = df['deskripsi'].apply(preprocess_text)
+
+tfidf = TfidfVectorizer()
+tfidf_matrix = tfidf.fit_transform(df['deskripsi'])
+nn_model = NearestNeighbors(metric='cosine', algorithm='brute')
+nn_model.fit(tfidf_matrix)
 
 # ============================================
-# Halaman: Rekomendasi Film
+# Sidebar: Pilih Judul Film
 # ============================================
-if selected == "🎬 Rekomendasi Film":
-    st.markdown("<h1 style='text-align:center;'>🎬 Sistem Rekomendasi Film</h1>", unsafe_allow_html=True)
+selected_title = st.sidebar.selectbox("🎞 Pilih Judul Film:", sorted(df['movie title'].dropna().unique()))
 
-    df = load_data_from_gdrive()
-    if df is None:
-        st.stop()
+# ============================================
+# Tampilkan Rekomendasi Otomatis
+# ============================================
+recommendations = recommend_nn(selected_title, df, tfidf_matrix, nn_model)
 
-    for feature in ['movie title', 'Generes', 'Director', 'Writer']:
-        df[feature] = df[feature].fillna('')
+if recommendations:
+    st.markdown(f"<h3>🎯 5 Film Mirip '<span style='color:#950002'>{selected_title}</span>'</h3>", unsafe_allow_html=True)
 
-    df['deskripsi'] = df.apply(lambda row: ' '.join(str(row[feature]) for feature in ['movie title', 'Generes', 'Director', 'Writer']), axis=1)
-    df['deskripsi'] = df['deskripsi'].apply(preprocess_text)
+    image_url = "https://raw.githubusercontent.com/abimanyuprimarendra/SistemRekomendasiFilm/main/gambar.jpeg"
+    cols = st.columns(5)
 
-    tfidf = TfidfVectorizer()
-    tfidf_matrix = tfidf.fit_transform(df['deskripsi'])
-    nn_model = NearestNeighbors(metric='cosine', algorithm='brute')
-    nn_model.fit(tfidf_matrix)
+    for i, rec in enumerate(recommendations[:5]):
+        with cols[i]:
+            genre_clean = rec['Generes']
+            if isinstance(genre_clean, str) and genre_clean.startswith('['):
+                try:
+                    genre_clean = ', '.join(eval(genre_clean))
+                except:
+                    genre_clean = genre_clean.strip("[]").replace("'", "").replace('"', '')
 
-    title_input = st.selectbox("🎞 Pilih Judul Film:", sorted(df['movie title'].dropna().unique()))
-
-    if st.button("🎯 Tampilkan Rekomendasi"):
-        recommendations = recommend_nn(title_input, df, tfidf_matrix, nn_model)
-
-        if recommendations:
-            st.markdown(f"<h3>🎯 5 Film Mirip '<span style='color:#950002'>{title_input}</span>'</h3>", unsafe_allow_html=True)
-
-            image_url = "https://raw.githubusercontent.com/abimanyuprimarendra/SistemRekomendasiFilm/main/gambar.jpeg"
-            cols = st.columns(5)
-
-            for i, rec in enumerate(recommendations[:5]):
-                with cols[i]:
-                    genre_clean = rec['Generes']
-                    if isinstance(genre_clean, str) and genre_clean.startswith('['):
-                        try:
-                            genre_clean = ', '.join(eval(genre_clean))
-                        except:
-                            genre_clean = genre_clean.strip("[]").replace("'", "").replace('"', '')
-
-                    st.markdown(f"""
-                        <div style='
-                            background-color: #fff;
-                            border-radius: 16px;
-                            padding: 15px;
-                            height: 420px;
-                            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-                            display: flex;
-                            flex-direction: column;
-                            justify-content: space-between;
-                        '>
-                            <div>
-                                <img src="{image_url}" style="width: 100%; border-radius: 8px; margin-bottom: 10px; max-height: 120px; object-fit: cover;" />
-                                <h4 style='margin-bottom: 0.5rem;'>🎞 {rec['Judul']}</h4>
-                                <p style='margin: 0; font-weight: bold;'>Genre: {genre_clean}</p>
-                                <p style='margin: 0; font-weight: bold;'>Rating: {rec['Rating']}</p>
-                            </div>
-                            <p style='margin-top: 10px; font-style: italic; font-size: 13px; color: #555;'>{rec['Deskripsi'][:200]}...</p>
-                        </div>
-                    """, unsafe_allow_html=True)
-        else:
-            st.warning(f"⚠ Film '{title_input}' tidak ditemukan dalam dataset.")
+            st.markdown(f"""
+                <div style='
+                    background-color: #fff;
+                    border-radius: 16px;
+                    padding: 15px;
+                    height: 420px;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-between;
+                '>
+                    <div>
+                        <img src="{image_url}" style="width: 100%; border-radius: 8px; margin-bottom: 10px; max-height: 120px; object-fit: cover;" />
+                        <h4 style='margin-bottom: 0.5rem;'>🎞 {rec['Judul']}</h4>
+                        <p style='margin: 0; font-weight: bold;'>Genre: {genre_clean}</p>
+                        <p style='margin: 0; font-weight: bold;'>Rating: {rec['Rating']}</p>
+                    </div>
+                    <p style='margin-top: 10px; font-style: italic; font-size: 13px; color: #555;'>{rec['Deskripsi'][:200]}...</p>
+                </div>
+            """, unsafe_allow_html=True)
+else:
+    st.warning(f"⚠ Film '{selected_title}' tidak ditemukan dalam dataset.")
