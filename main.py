@@ -89,42 +89,37 @@ if search:
         st.markdown(f"<h3>🎯 5 Film Mirip '<span style='color:#950002'>{selected_title}</span>'</h3>", unsafe_allow_html=True)
 
         image_url = "https://raw.githubusercontent.com/abimanyuprimarendra/SistemRekomendasiFilm/main/gambar.jpeg"
+        cols = st.columns(5)  # 5 card sejajar horizontal
 
-        for i in range(0, len(recommendations), 2):
-            cols = st.columns(2)
-            for j in range(2):
-                if i + j < len(recommendations):
-                    rec = recommendations[i + j]
-                    genre_clean = rec['Generes']
-                    if isinstance(genre_clean, str) and genre_clean.startswith('['):
-                        try:
-                            genre_clean = ', '.join(eval(genre_clean))
-                        except:
-                            genre_clean = genre_clean.strip("[]").replace("'", "").replace('"', '')
+        for i, rec in enumerate(recommendations[:5]):
+            with cols[i]:
+                genre_clean = rec['Generes']
+                if isinstance(genre_clean, str) and genre_clean.startswith('['):
+                    try:
+                        genre_clean = ', '.join(eval(genre_clean))
+                    except:
+                        genre_clean = genre_clean.strip("[]").replace("'", "").replace('"', '')
 
-                    with cols[j]:
-                        st.markdown(f"""
-                            <div style='
-                                background-color: #ffffff;
-                                border-radius: 16px;
-                                padding: 16px;
-                                margin-bottom: 25px;
-                                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                                display: flex;
-                                flex-direction: row;
-                                gap: 20px;
-                                align-items: flex-start;
-                            '>
-                                <img src="{image_url}" style="width: 120px; height: 160px; border-radius: 12px; object-fit: cover;" />
-                                <div style="flex: 1;">
-                                    <h4 style='margin-top: 0;'>🎬 {rec['Judul']}</h4>
-                                    <p style='margin: 2px 0;'><strong>Genre:</strong> {genre_clean}</p>
-                                    <p style='margin: 2px 0;'><strong>Rating:</strong> {rec['Rating']}</p>
-                                    <p style='margin-top: 8px; color: #444; font-size: 14px; line-height: 1.4;'>
-                                        {rec['Deskripsi'][:350]}...
-                                    </p>
-                                </div>
-                            </div>
-                        """, unsafe_allow_html=True)
+                st.markdown(f"""
+                    <div style='
+                        background-color: #ffffff;
+                        border-radius: 16px;
+                        padding: 16px;
+                        height: 420px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: space-between;
+                        text-align: left;
+                    '>
+                        <img src="{image_url}" style="width: 100%; height: 120px; border-radius: 10px; object-fit: cover; margin-bottom: 10px;" />
+                        <div>
+                            <h4 style='margin: 0;'>🎬 {rec['Judul']}</h4>
+                            <p style='margin: 4px 0; font-weight: bold;'>Genre: {genre_clean}</p>
+                            <p style='margin: 4px 0; font-weight: bold;'>Rating: {rec['Rating']}</p>
+                            <p style='font-size: 12px; color: #444; margin-top: 8px;'>{rec['Deskripsi'][:150]}...</p>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
     else:
         st.warning(f"⚠ Film '{selected_title}' tidak ditemukan dalam dataset.")
