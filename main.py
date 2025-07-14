@@ -74,13 +74,7 @@ if search:
         st.markdown(f"<h3>🎯 5 Film Mirip '<span style='color:#950002'>{selected_title}</span>'</h3>", unsafe_allow_html=True)
 
         image_url = "https://raw.githubusercontent.com/abimanyuprimarendra/SistemRekomendasiFilm/main/gambar.jpeg"
-
-        # Tentukan jumlah kolom berdasarkan lebar layar (responsif)
-                # Tentukan jumlah kolom berdasarkan lebar layar (responsif)
-        screen_width = st.get_option("browser.clientWidth")
-        if screen_width < 768:
-        cols = st.columns(5)
-
+        cols = st.columns(5)  # Tetap horizontal di desktop, responsif otomatis di mobile
 
         for i, rec in enumerate(recommendations[:5]):
             with cols[i]:
