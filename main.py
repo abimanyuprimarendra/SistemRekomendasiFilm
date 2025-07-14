@@ -83,12 +83,19 @@ if st.button("🎯 Tampilkan Rekomendasi"):
     if recommendations:
         st.markdown(f"<h3>🎯 5 Film Mirip '<span style='color:#950002'>{title_input}</span>'</h3>", unsafe_allow_html=True)
 
+        # ✅ Gambar dekoratif dari Google Drive di atas hasil rekomendasi
+        st.markdown("""
+            <div style='text-align: center; margin-bottom: 20px;'>
+                <img src='https://drive.google.com/uc?id=1aTqrSJnyNmf7JVV883b7K7nS8LPioiIm' width='100%' 
+                     style='border-radius: 10px; max-height: 240px; object-fit: cover;' />
+            </div>
+        """, unsafe_allow_html=True)
+
         # Horizontal layout 5 card
         cols = st.columns(5)
 
         for i, rec in enumerate(recommendations[:5]):
             with cols[i]:
-                # Bersihkan genre jika list string
                 genre_clean = rec['Generes']
                 if isinstance(genre_clean, str) and genre_clean.startswith('['):
                     try:
@@ -96,7 +103,6 @@ if st.button("🎯 Tampilkan Rekomendasi"):
                     except:
                         genre_clean = genre_clean.strip("[]").replace("'", "").replace('"', '')
 
-                # Tampilkan card dengan tinggi tetap
                 st.markdown(f"""
                     <div style='
                         background-color: #fff;
@@ -117,4 +123,4 @@ if st.button("🎯 Tampilkan Rekomendasi"):
                     </div>
                 """, unsafe_allow_html=True)
     else:
-        st.warning(f"⚠️ Film '{title_input}' tidak ditemukan dalam dataset.")
+        st.warning(f"⚠ Film '{title_input}' tidak ditemukan dalam dataset.")
